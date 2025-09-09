@@ -1,0 +1,39 @@
+{
+  "name": "v-keycloak-store",
+  "version": "1.0.1",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "keycloak-js": "^26.1.5"
+  },
+  "peerDependencies": {
+    "pinia": "^2.1.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0"
+  },
+    "keywords": [
+    "vue",
+    "plugin",
+    "keycloak",
+    "authentication",
+    "auth",
+    "authorization",
+    "vue3",
+    "vue-router",
+    "pinia"
+  ],
+  "author": "Márlon Bento Azevedo (https://github.com/marlon-bento)",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlon-bento/v-keycloak-store"
+  },
+  "description": "Plugin de autenticação e autorização para Vue 3 usando Keycloak, Vue Router e Pinia."
+}
