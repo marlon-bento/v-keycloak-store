@@ -3,14 +3,31 @@ import { useKeycloakStore } from "./store.js";
 
 export const KeycloakPlugin = {
     install: (app, options) => {
+
         if (!options || !options.keycloak) {
             throw new Error('A instância do Keycloak deve ser fornecida!');
         } else if (!options.router) {
             throw new Error('O roteador (router) deve ser fornecido!');
         }
 
-        const { keycloak, router, onReady, onError, onLogout, onLogin, optionsKeycloak } = options;
-
+        const { keycloak, router, onReady, onError, onLogout, onLogin, optionsKeycloak, refreshTimeout, deactivateTimeout } = options;
+        const startTokenRefresh = () => {
+            setInterval(() => {
+                keycloak
+                    .updateToken(60)
+                    .then((refreshed) => {
+                        if (refreshed) {
+                            console.info("Token refreshed");
+                        }
+                        const keycloakStore = useKeycloakStore();
+                        keycloakStore.getDataKeycloak();
+                    })
+                    .catch(() => {
+                        console.error("Failed to refresh token");
+                    });
+            }, 
+            refreshTimeout || 150000);
+        };
         // Obtem store de dentro da biblioteca
         const keycloakStore = useKeycloakStore();
         // INJETA a instância do Keycloak no store para que ele possa usá-la
@@ -30,6 +47,9 @@ export const KeycloakPlugin = {
                     onLogout();
                 }
             };
+            if (deactivateTimeout !== true){
+                startTokenRefresh();
+            }
         }).catch((error) => {
             if (onError && typeof onError === 'function') {
                 onError(error);
