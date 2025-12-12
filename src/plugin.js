@@ -26,7 +26,7 @@ export const KeycloakPlugin = {
                         console.error("Failed to refresh token");
                     });
             }, 
-            refreshTimeout || 150000);
+            refreshTimeout || 90000);
         };
         // Obtem store de dentro da biblioteca
         const keycloakStore = useKeycloakStore();

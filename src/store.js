@@ -61,6 +61,7 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   function getDataKeycloak() {
     if (!keycloakInstance.value) return;
     const keycloak = keycloakInstance.value;
+    console.log("Keycloak Instance:", keycloak);
     token.value = keycloak.token || "";
     id.value = keycloak.idTokenParsed?.sub || null;
     username.value = keycloak.idTokenParsed?.preferred_username || null;

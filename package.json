@@ -1,6 +1,6 @@
 {
   "name": "v-keycloak-store",
-  "version": "1.1.0",
+  "version": "1.1.3",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
@@ -11,10 +11,10 @@
   ],
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "keycloak-js": "^26.1.5"
+    "keycloak-js": "^26.1.5",
+    "pinia": "^2.1.0 || ^3.0.0"
   },
   "peerDependencies": {
-    "pinia": "^2.1.0",
     "vue": "^3.4.0",
     "vue-router": "^4.3.0"
   },
