@@ -32,7 +32,9 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   const is_superuser = ref(null)
   const perms = ref([]);
   const groups = ref([]);
+  const roles = ref([]);
   const extend = ref({})
+
 
   function setExtend(key, value) {
     if (!extend.value.hasOwnProperty(key)) {
@@ -68,6 +70,10 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
     name.value = keycloak.idTokenParsed?.name || null;
     email.value = keycloak.idTokenParsed?.email || null;
     groups.value = keycloak.idTokenParsed?.groups || [];
+    roles.value = keycloak.idTokenParsed?.roles || [];
+    console.log("User Groups:", groups.value);
+    console.log("User Roles:", roles.value);
+
   }
 
   function removeDataKeycloak() {
@@ -137,7 +143,7 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
     setKeycloakInstance,
     keycloakInstance,
     
-    token, token_decode, groups, isAuthenticated,
+    token, token_decode, groups, roles, isAuthenticated,
     id, username, first_name, name, email, is_staff, is_superuser, getDataKeycloak, is_memberof, has_perm, removeDataKeycloak, gravatar, extend, setExtend, removeExtend, perms, logoutAction, hasAccess
   };
 });

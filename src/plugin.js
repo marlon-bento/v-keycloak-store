@@ -1,9 +1,9 @@
 // src/plugin.js
 import { useKeycloakStore } from "./store.js";
-
+import directiveCan from "./directiveCan.js";
 export const KeycloakPlugin = {
     install: (app, options) => {
-
+        app.directive('can', directiveCan);
         if (!options || !options.keycloak) {
             throw new Error('A instância do Keycloak deve ser fornecida!');
         } else if (!options.router) {
