@@ -1,6 +1,6 @@
 // src/store.js
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, toRaw } from "vue";
 import CryptoJS from 'crypto-js';
 
 export const useKeycloakStore = defineStore("keycloakStore", () => {
@@ -55,8 +55,11 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   });
 
   function logoutAction() {
-    if (keycloakInstance.value) {
-      keycloakInstance.value.logout();
+    const kc = keycloakInstance.value ? toRaw(keycloakInstance.value) : null;
+    if (!kc) return;
+
+    if (kc) {
+      kc.logout();
     }
   }
 

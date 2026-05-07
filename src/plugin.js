@@ -9,22 +9,25 @@ export const KeycloakPlugin = {
         } else if (!options.router) {
             throw new Error('O roteador (router) deve ser fornecido!');
         }
-
+        const refreshAndSync = async () => {
+            try {
+                // Tenta renovar se expirar em menos de 70 segundos
+                const refreshed = await keycloak.updateToken(70);
+                
+                if (refreshed) {
+                    console.info("Token renovado automaticamente.");
+                    // Sincroniza a store com o novo token
+                    keycloakStore.getDataKeycloak(); 
+                }
+            } catch (error) {
+                console.error("Falha ao renovar token em background:", error);
+                keycloakStore.logoutAction(); // Força logout se o refresh falhar (refresh token expirou)
+            }
+        };
         const { keycloak, router, onReady, onError, onLogout, onLogin, optionsKeycloak, refreshTimeout, deactivateTimeout } = options;
         const startTokenRefresh = () => {
             setInterval(() => {
-                keycloak
-                    .updateToken(60)
-                    .then((refreshed) => {
-                        if (refreshed) {
-                            console.info("Token refreshed");
-                        }
-                        const keycloakStore = useKeycloakStore();
-                        keycloakStore.getDataKeycloak();
-                    })
-                    .catch(() => {
-                        console.error("Failed to refresh token");
-                    });
+                refreshAndSync();
             }, 
             refreshTimeout || 90000);
         };
@@ -50,6 +53,13 @@ export const KeycloakPlugin = {
             if (deactivateTimeout !== true){
                 startTokenRefresh();
             }
+
+            // Callback quando o token expira de vez
+            keycloak.onTokenExpired = () => {
+                console.warn('Token expirou. Tentando renovar...');
+                refreshAndSync();
+            };
+
         }).catch((error) => {
             if (onError && typeof onError === 'function') {
                 onError(error);

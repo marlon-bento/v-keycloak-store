@@ -1,70 +1,66 @@
 import { useKeycloakStore } from "./store.js";
 
-function checkPermissions(el, binding) {
+/**
+ * Verifica se o usuário possui as permissões necessárias (papeis ou grupos).
+ * Suporta string única ou array de strings.
+ * Exemplo de uso:
+ * <div v-can:role="'admin'">Apenas admins veem isso</div>
+ * <div v-can:group="'managers'">Apenas managers veem isso</div>
+ * <div v-can:role="['admin', 'editor']">Admins ou editors veem isso</div>
+ * <div v-can:group="['managers', 'staff']">Managers ou staff veem isso</div>
+ */
+function verificarPermissoes(el, binding) {
     const keycloakStore = useKeycloakStore();
+    
     if (!keycloakStore.keycloakInstance) {
-        // Keycloak não inicializado. Ocultando elemento por segurança.
         el.style.display = 'none';
         return;
     }
 
-    const type = binding.arg; //  'role' ou 'group' da diretiva usada
-    const value = binding.value; // O valor passado, ex: 'admin'
+    const tipo = binding.arg; // 'role' ou 'group'
+    const valorSujetado = binding.value;
 
-    let hasPermission = false;
+    // Converte o valor para array caso seja uma string e normaliza para maiúsculas
+    const listaRequerida = Array.isArray(valorSujetado) 
+        ? valorSujetado.map(v => v.toUpperCase()) 
+        : [valorSujetado.toUpperCase()];
 
-    // Lógica baseada no argumento e valor fornecidos à diretiva
-    switch (type) {
-        case 'role':
-            // Remove barras e normaliza nomes dos papéis
-            const userRoles = keycloakStore.roles.map((r) =>
-            r
-                .replace(/^\/+|\/+$/g, "")
-                .split("/")
-                .pop()
-                .toUpperCase()
-            );
-            hasPermission = userRoles.includes(value.toUpperCase());
-            break;
+    let temAcesso = false;
 
-        case 'group':
-            // Remove barras e normaliza nomes dos grupos
-            const userGroups = keycloakStore.groups.map((g) =>
-            g
-                .replace(/^\/+|\/+$/g, "")
-                .split("/")
-                .pop()
-                .toUpperCase()
-            );
-            hasPermission = userGroups.includes(value.toUpperCase());
-            break;
+    // Função interna para limpar e formatar strings do Keycloak
+    const normalizarCaminho = (caminho) => 
+        caminho.replace(/^\/+|\/+$/g, "").split("/").pop().toUpperCase();
 
-        default:
-            console.warn(`Argumento inválido para v-can: ${type}. Use :role ou :group`);
-            hasPermission = false;
+    if (tipo === 'role') {
+        const papeisUsuario = keycloakStore.roles.map(normalizarCaminho);
+        // Verifica se ao menos um papel requerido está presente nos papéis do usuário
+        temAcesso = listaRequerida.some(papel => papeisUsuario.includes(papel));
+    } else if (tipo === 'group') {
+        const gruposUsuario = keycloakStore.groups.map(normalizarCaminho);
+        // Verifica se ao menos um grupo requerido está presente nos grupos do usuário
+        temAcesso = listaRequerida.some(grupo => gruposUsuario.includes(grupo));
+    } else {
+        console.warn(`Argumento inválido: ${tipo}. Use :role ou :group
+            exemplo: v-can:role="'admin'" ou v-can:group="'managers'", também suporta multiplos: v-can:role="['admin', 'editor']" ou v-can:group="['managers', 'staff']"
+            `);
     }
 
-    // Ação no DOM
-    if (!hasPermission) {
-        // Verifica se o elemento tem um pai para poder se remover
+    // Gerenciamento do elemento no DOM
+    if (!temAcesso) {
         if (el.parentNode) {
-            const comment = document.createComment(` v-can removido: ${type}' `);
-            el.parentNode.replaceChild(comment, el);
+            const comentario = document.createComment(` v-can removido: ${tipo} `);
+            el.parentNode.replaceChild(comentario, el);
         } else {
-            // Fallback caso o elemento ainda não tenha sido inserido no DOM (raro no mounted)
             el.style.display = 'none';
         }
-    } else {
-        // Se tiver permissão, não faz nada. O elemento renderiza normalmente.
     }
 }
 
 export default {
     mounted(el, binding) {
-        checkPermissions(el, binding);
+        verificarPermissoes(el, binding);
     },
     updated(el, binding) {
-        // Cuidado: Se o elemento foi removido no mounted, este updated não será chamado.
-        checkPermissions(el, binding);
+        verificarPermissoes(el, binding);
     },
 };
