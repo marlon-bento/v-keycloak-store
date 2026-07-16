@@ -3,7 +3,7 @@ Plugin de autenticação e autorização para Vue 3 utilizando Keycloak, Vue Rou
 ```
 npm install v-keycloak-store keycloak-js pinia  
 ```
-Configuração InicialPara iniciar o poder da autenticação, você precisa registrar o plugin na sua aplicação Vue, fornecendo a instância do Keycloak e o Vue Router.  main.js ou main.ts
+Configuração InicialPara iniciar o poder da autenticação, você precisa registrar o plugin na sua aplicação Vue, fornecendo a instância do Keycloak e o Vue Router.  main.js ou main.ts 
 
 
 ```js
