@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.5...v1.2.6) (2026-07-16)
+
+
+### Bug Fixes
+
+* o ultimo teste funcionou, barrou quando não tinha fix agora testando se passa com fix ([b21b701](https://github.com/marlon-bento/v-keycloak-store/commit/b21b7019800b7d0e0d64150663e1324df0b8ae85))
+
 ## [1.2.5](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.2...v1.2.5) (2026-07-16)
 
 ## [1.2.4](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.3...v1.2.4) (2026-07-16)
