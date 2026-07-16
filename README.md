@@ -1,4 +1,4 @@
-v-keycloak-storePlugin de autenticação e autorização para Vue 3 utilizando Keycloak, Vue Router e Pinia. Ele fornece gerenciamento de estado global para o usuário autenticado, renovação automática de token em background, proteção de rotas nativa e diretivas customizadas para controle de acesso no DOM.  InstalaçãoComo a biblioteca depende do ecossistema moderno do Vue, certifique-se de instalar as dependências necessárias junto com ela:
+Plugin de autenticação e autorização para Vue 3 utilizando Keycloak, Vue Router e Pinia. Ele fornece gerenciamento de estado global para o usuário autenticado, renovação automática de token em background, proteção de rotas nativa e diretivas customizadas para controle de acesso no DOM.  InstalaçãoComo a biblioteca depende do ecossistema moderno do Vue, certifique-se de instalar as dependências necessárias junto com ela:
 
 ```
 npm install v-keycloak-store keycloak-js pinia
