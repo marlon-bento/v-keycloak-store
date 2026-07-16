@@ -113,7 +113,7 @@ if (authStore.is_memberof('admin_group')) {
 
 // Lógica de logout
 const efetuarLogout = () => {
-    authStore.logoutAction(); // Encerra a sessão no Keycloak e limpa o store
+    authStore.logoutAction(); // Encerra a sessão no Keycloak e limpa o store 
 }
 </script>
 
