@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.3.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.6...v1.3.0) (2026-07-16)
+
+
+### Features
+
+* disparando nova funcionalidade apos o merge ([0ffed6b](https://github.com/marlon-bento/v-keycloak-store/commit/0ffed6b885e32429e263830f3d0b983d5d56866c))
+* testando feat para ver se vai gerar normalmente a release certa 2.x ([f84c621](https://github.com/marlon-bento/v-keycloak-store/commit/f84c62118fe7627c488d530eb628f2b131445c18))
+
 ## [1.2.6](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.5...v1.2.6) (2026-07-16)
 
 
