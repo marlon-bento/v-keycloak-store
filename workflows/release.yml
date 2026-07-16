@@ -1,0 +1,53 @@
+# ========
+# Arquivo definitivo de automação de versionamento e publicação.
+# O Release-It é isolado para operar apenas no escopo do Git.
+# A compilação e a publicação no NPM são executadas como passos independentes,
+# garantindo que o Trusted Publishing (OIDC) valide a origem sem interferências.
+# ========
+name: Release and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Execute Git Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx release-it --ci
+
+      # - name: Build Project por enquanto esse não precisa de build
+      #   run: npm run build
+
+      - name: Publish to NPM
+        run: npm publish --provenance --access public
