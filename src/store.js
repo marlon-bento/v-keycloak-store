@@ -63,7 +63,6 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
     keycloakInstance.value = instance;
   }
 
-
   const token = ref("");
   const token_decode = computed(() => {
     return token.value ? JSON.parse(atob(token.value.split(".")[1])) : null;
