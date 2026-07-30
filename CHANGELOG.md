@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.4.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.3.0...v1.4.0) (2026-07-30)
+
+
+### Features
+
+* agora é possível rastrear logs de conexão que foi perdida ([c745c3e](https://github.com/marlon-bento/v-keycloak-store/commit/c745c3eef84ca376c5c886c8dcec7afcea5fce3f))
+
 # [1.3.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.2.6...v1.3.0) (2026-07-16)
 
 
