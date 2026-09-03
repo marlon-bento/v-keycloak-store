@@ -12,11 +12,11 @@
   "dependencies": {
     "crypto-js": "^4.2.0",
     "keycloak-js": "^26.1.5",
-    "pinia": "^2.1.0 || ^3.0.0"
+    "pinia": ">=2.1.0"
   },
   "peerDependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.3.0"
+    "vue": ">=3.4.0",
+    "vue-router": ">=4.3.0"
   },
   "keywords": [
     "vue",
