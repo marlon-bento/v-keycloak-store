@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.0...v1.4.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* analisando npm ci ([9ba94ce](https://github.com/marlon-bento/v-keycloak-store/commit/9ba94ce5ad9295af9779ba4ee56d64674a635239))
+* arrumando versões ([be6b666](https://github.com/marlon-bento/v-keycloak-store/commit/be6b6661985d82c2ae3ccd885659b83e89c427ec))
+
 # [1.4.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.3.0...v1.4.0) (2026-07-30)
 
 
