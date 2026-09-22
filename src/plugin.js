@@ -14,9 +14,10 @@ export const KeycloakPlugin = {
     // Devolve nada.
     // É usada para acoplar a lógica de autenticação ao ciclo de vida e rotas do frontend.
     install: (app, options) => {
-
+        // pode usar como v-can ou v-has, ambos funcionam da mesma forma
         app.directive('can', directiveCan);
-        
+        app.directive('has', directiveCan);
+
         if (!options || !options.keycloak) {
             throw new Error('A instância do Keycloak deve ser fornecida!');
         } else if (!options.router) {
@@ -24,10 +25,14 @@ export const KeycloakPlugin = {
         }
 
         // 1. PRIMEIRO: Inicializamos as dependências e o Store
-        const { keycloak, router, onReady, onError, onLogout, onLogin, optionsKeycloak, refreshTimeout, deactivateTimeout } = options;
+        const { keycloak, router, onReady, onError, onLogout, onLogin, optionsKeycloak, refreshTimeout, deactivateTimeout, debug } = options;
         // Obtem store de dentro da biblioteca
         const keycloakStore = useKeycloakStore();
-
+        // Ativa o modo de depuração na store caso a opção debug seja verdadeira.
+        if (debug) {
+            keycloakStore.setModoDebug(true);
+            console.info("Modo debug ativado. Logs internos do Keycloak serão exibidos no console.");
+        }
         // INJETA a instância do Keycloak no store para que ele possa usá-la
         keycloakStore.setKeycloakInstance(keycloak);
         // Tenta renovar o token de acesso no servidor assincronamente.
@@ -38,21 +43,23 @@ export const KeycloakPlugin = {
             try {
                 // Tenta renovar se expirar em menos de 70 segundos
                 const refreshed = await keycloak.updateToken(70);
-                
+
                 if (refreshed) {
-                    console.info("Token renovado automaticamente.");
+                    if (debug) {
+                        console.info("Token renovado automaticamente.");
+                    }
                     // Sincroniza a store com o novo token
-                    keycloakStore.getDataKeycloak(); 
+                    keycloakStore.getDataKeycloak();
                 }
             } catch (error) {
                 if (!keycloak.authenticated) {
-                    keycloakStore.logoutAction("Sessão perdida no refreshAndSync. O token expirou e o servidor recusou a renovação."); 
+                    keycloakStore.logoutAction("Sessão perdida no refreshAndSync. O token expirou e o servidor recusou a renovação.");
                 } else {
                     keycloakStore.registrarLogDeslogamento("Erro de rede no refreshAndSync, mas a propriedade authenticated continua true. Evitando logout.", false);
                 }
             }
         };
-        
+
         // Configura o temporizador cíclico de validação de token.
         // Recebe nada.
         // Devolve nada.
@@ -60,8 +67,8 @@ export const KeycloakPlugin = {
         const startTokenRefresh = () => {
             setInterval(() => {
                 refreshAndSync();
-            }, 
-            refreshTimeout || 90000);
+            },
+                refreshTimeout || 90000);
         };
 
 
@@ -110,7 +117,7 @@ export const KeycloakPlugin = {
             };
 
 
-            if (deactivateTimeout !== true){
+            if (deactivateTimeout !== true) {
                 startTokenRefresh();
             }
 
@@ -123,9 +130,16 @@ export const KeycloakPlugin = {
             }
         });
 
-        router.beforeEach(async (to, from, next) => {
+
+
+        // Valida o acesso do usuário para a rota solicitada.
+        // Recebe o objeto de destino da rota (to).
+        // Devolve um booleano indicando se a navegação deve prosseguir (true) ou ser bloqueada (false).
+        // É usada para centralizar a lógica de autenticação desacoplada da assinatura do roteador.
+        const verificarAcessoRota = async (to) => {
             if (to.meta.requiresAuth) {
                 keycloakStore.getDataKeycloak();
+
                 if (!keycloakStore.token || !keycloak.authenticated) {
                     keycloakStore.registrarLogDeslogamento(`Bloqueado pelo router na rota ${to.path}. Token vazio ou authenticated false.`);
                     try {
@@ -135,16 +149,42 @@ export const KeycloakPlugin = {
                         if (onLogin && typeof onLogin === 'function') {
                             onLogin();
                         }
+                        return false;
                     } catch (error) {
                         keycloakStore.registrarLogDeslogamento(`Erro ao tentar redirecionar para a página de login: ${error}`);
                         keycloakStore.removeDataKeycloak();
+                        return false;
                     }
-                } else {
-                    next();
                 }
-            } else {
-                next();
+                return true;
             }
-        });
+            return true;
+        };
+
+        // Variável booleana que detecta se a versão do Vue Router é 4 ou superior.
+        // É usada para acoplar dinamicamente o método do guardião de rotas sem causar avisos no console.
+        const isVueRouter4 = typeof router.hasRoute === 'function';
+
+        if (isVueRouter4) {
+            if (debug) {
+                console.info("Vue Router 4 detectado. Usando guardião de rotas com retorno de Promise.");
+            }
+            router.beforeEach(async (to) => {
+                return await verificarAcessoRota(to);
+            });
+        } else {
+            if (debug) {
+                console.info("Vue Router 3 detectado. Usando guardião de rotas com callback next().");
+            }
+            router.beforeEach(async (to, from, next) => {
+                const permitido = await verificarAcessoRota(to);
+                if (permitido) {
+                    next();
+                } else {
+                    next(false);
+                }
+            });
+        }
     },
+
 };

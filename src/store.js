@@ -15,7 +15,12 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   // Variável de controle booleana para evitar cascatas de gravação.
   // É usada para garantir que apenas o gatilho original da falha seja registrado, bloqueando logs redundantes na mesma queda de sessão.
   const deslogamentoEmAndamento = ref(false);
-
+  // É usada para libertar ou bloquear a exibição de logs na consola do navegador.
+  const modoDebug = ref(false);
+  // É usada na inicialização do plugin para configurar a visibilidade dos logs internos.
+  function setModoDebug(valor) {
+    modoDebug.value = !!valor;
+  }
   // Função responsável por registrar o log de deslogamento na memória do navegador.
   // Recebe uma string contendo o motivo da queda de sessão.
   // Devolve nada.
@@ -137,7 +142,9 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   function getDataKeycloak() {
     if (!keycloakInstance.value) return;
     const keycloak = keycloakInstance.value;
-    console.log("Keycloak Instance:", keycloak);
+    if (modoDebug.value) {
+        console.log("Keycloak Instance:", keycloak);
+    }
     token.value = keycloak.token || "";
     id.value = keycloak.idTokenParsed?.sub || null;
     username.value = keycloak.idTokenParsed?.preferred_username || null;
@@ -145,8 +152,10 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
     email.value = keycloak.idTokenParsed?.email || null;
     groups.value = keycloak.idTokenParsed?.groups || [];
     roles.value = keycloak.idTokenParsed?.roles || [];
-    console.log("User Groups:", groups.value);
-    console.log("User Roles:", roles.value);
+    if (modoDebug.value) {
+        console.log("User Groups:", groups.value);
+        console.log("User Roles:", roles.value);
+    }
 
   }
 
@@ -230,7 +239,7 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
 
     setKeycloakInstance,
     keycloakInstance,
-    
+    setModoDebug,
     token, token_decode, groups, roles, isAuthenticated,
     id, username, first_name, name, email, is_staff, is_superuser, getDataKeycloak, is_memberof, has_perm, removeDataKeycloak, gravatar, extend, setExtend, removeExtend, perms, logoutAction, hasAccess,
     registrarLogDeslogamento
