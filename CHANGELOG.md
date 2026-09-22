@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.1...v1.4.2) (2026-09-22)
+
+
+### Bug Fixes
+
+* retirando logs e só deixando pra modo debug e modernizando o uso do router v4 ([7ef5ae6](https://github.com/marlon-bento/v-keycloak-store/commit/7ef5ae6eb94ffc5e31ac463838882863ab04b2cb))
+
 ## [1.4.1](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.0...v1.4.1) (2026-09-03)
 
 
