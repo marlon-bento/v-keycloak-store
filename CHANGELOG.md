@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.2...v1.4.3) (2026-09-23)
+
+
+### Bug Fixes
+
+* resolução de bug que ocorria quando usava requireauth de ficar em loop infinito de redirecionamento ([5f98968](https://github.com/marlon-bento/v-keycloak-store/commit/5f98968dd8f1df022944e59150977481961b531e))
+
 ## [1.4.2](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.1...v1.4.2) (2026-09-22)
 
 
