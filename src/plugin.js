@@ -73,7 +73,7 @@ export const KeycloakPlugin = {
 
 
 
-        keycloak.init({
+        const initPromise = keycloak.init({
             ...optionsKeycloak
         }).then(() => {
             keycloakStore.getDataKeycloak();
@@ -138,20 +138,29 @@ export const KeycloakPlugin = {
         // É usada para centralizar a lógica de autenticação desacoplada da assinatura do roteador.
         const verificarAcessoRota = async (to) => {
             if (to.meta.requiresAuth) {
-                keycloakStore.getDataKeycloak();
-
+                await initPromise;
+                
                 if (!keycloakStore.token || !keycloak.authenticated) {
+
+                    if (debug) {
+                        console.info(`Acesso negado na rota ${to.path}. Token vazio ou authenticated false.`);
+                    }
                     keycloakStore.registrarLogDeslogamento(`Bloqueado pelo router na rota ${to.path}. Token vazio ou authenticated false.`);
                     try {
+                        if (debug) {
+                            console.info(`Redirecionando para a pagina de login do Keycloak. Rota solicitada: ${to.path}`);
+                            console.info(`Token atual do Keycloak Store: ${keycloakStore.token}`);
+                        }
                         await keycloak.login({
-                            redirectUri: window.location.origin + to.fullPath,
+                            redirectUri: window.location.origin + to.path,
                         });
+                        keycloakStore.getDataKeycloak();
                         if (onLogin && typeof onLogin === 'function') {
                             onLogin();
                         }
                         return false;
                     } catch (error) {
-                        keycloakStore.registrarLogDeslogamento(`Erro ao tentar redirecionar para a página de login: ${error}`);
+                        keycloakStore.registrarLogDeslogamento(`Erro ao tentar redirecionar para a pagina de login: ${error}`);
                         keycloakStore.removeDataKeycloak();
                         return false;
                     }

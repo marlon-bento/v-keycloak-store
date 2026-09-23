@@ -140,11 +140,13 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
   // Devolve nada.
   // É usada logo após o login ou renovação de token para manter os dados da interface sempre atualizados.
   function getDataKeycloak() {
-    if (!keycloakInstance.value) return;
+    if (!keycloakInstance.value) return false;
+    
     const keycloak = keycloakInstance.value;
     if (modoDebug.value) {
         console.log("Keycloak Instance:", keycloak);
     }
+    
     token.value = keycloak.token || "";
     id.value = keycloak.idTokenParsed?.sub || null;
     username.value = keycloak.idTokenParsed?.preferred_username || null;
@@ -152,11 +154,13 @@ export const useKeycloakStore = defineStore("keycloakStore", () => {
     email.value = keycloak.idTokenParsed?.email || null;
     groups.value = keycloak.idTokenParsed?.groups || [];
     roles.value = keycloak.idTokenParsed?.roles || [];
+    
     if (modoDebug.value) {
         console.log("User Groups:", groups.value);
         console.log("User Roles:", roles.value);
     }
 
+    return true;
   }
 
   // Zera completamente os dados do usuário no estado global.
