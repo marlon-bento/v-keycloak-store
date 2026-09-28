@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/marlon-bento/v-keycloak-store/compare/v1.5.0...v1.5.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* adicionando o jansem como contribuidor no npm da biblioteca ([beb0736](https://github.com/marlon-bento/v-keycloak-store/commit/beb0736dff3e75810e3ca7daf1dc1dbbd95488ea))
+
 # [1.5.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.3...v1.5.0) (2026-09-28)
 
 

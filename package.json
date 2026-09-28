@@ -1,6 +1,6 @@
 {
   "name": "v-keycloak-store",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -39,7 +39,7 @@
   ],
   "author": "Márlon Bento Azevedo (https://github.com/marlon-bento)",
   "license": "ISC",
-    "contributors": [
+  "contributors": [
     {
       "name": "Jansem Wallemberg Torquetti Maia",
       "url": "https://github.com/JansemWall"
