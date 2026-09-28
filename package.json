@@ -3,8 +3,16 @@
   "version": "1.4.3",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
   },
   "files": [
     "src"
