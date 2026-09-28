@@ -39,6 +39,12 @@
   ],
   "author": "Márlon Bento Azevedo (https://github.com/marlon-bento)",
   "license": "ISC",
+    "contributors": [
+    {
+      "name": "Jansem Wallemberg Torquetti Maia",
+      "url": "https://github.com/JansemWall"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marlon-bento/v-keycloak-store.git"
