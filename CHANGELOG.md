@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.5.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.3...v1.5.0) (2026-09-28)
+
+
+### Features
+
+* adiciona composable usePermissions, suporte a RBAC em rotas e tipagem TypeScript ([e1eb814](https://github.com/marlon-bento/v-keycloak-store/commit/e1eb8144f9ed14bf735665daf39984888081805f))
+
 ## [1.4.3](https://github.com/marlon-bento/v-keycloak-store/compare/v1.4.2...v1.4.3) (2026-09-23)
 
 
