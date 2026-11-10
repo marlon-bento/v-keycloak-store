@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "keycloak-js": "^26.1.5",
+    "keycloak-js": "26.1.5",
     "pinia": ">=2.1.0"
   },
   "peerDependencies": {
