@@ -1,33 +1,49 @@
-import { useKeycloakStore } from './store.js';
+// ========
+// Guardiao de rotas do Vue Router para autenticacao OIDC/Keycloak e autorizacao RBAC.
+// Valida sessao ativa, papeis (roles), grupos (groups), regras customizadas (customRules)
+// e executa auto-recuperacao automatica na rota de erro 403.
+// ========
+
+import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
+import { useKeycloakStore } from './store';
+import type { AuthGuardOptions } from './types';
 import {
   checkAnyRole,
   checkAllRoles,
   checkAnyGroup,
   checkAllGroups
-} from './authorization.js';
+} from './authorization';
 
-function isForbiddenRoute(to, forbiddenRoute) {
+// Converte um valor unico ou lista de permissoes da meta da rota em um array tipado
+function normalizarListaPermissoes(valor: string | readonly string[]): readonly string[] {
+  return typeof valor === 'string' ? [valor] : valor;
+}
+
+// Verifica se a rota de destino corresponde a rota configurada para erro 403
+function isForbiddenRoute(to: RouteLocationNormalized, forbiddenRoute?: RouteLocationRaw): boolean {
   if (!forbiddenRoute) return false;
   if (typeof forbiddenRoute === 'string') {
     return to.path === forbiddenRoute;
   }
-  if (forbiddenRoute.name && to.name === forbiddenRoute.name) {
+  if ('name' in forbiddenRoute && forbiddenRoute.name && to.name === forbiddenRoute.name) {
     return true;
   }
-  if (forbiddenRoute.path && to.path === forbiddenRoute.path) {
+  if ('path' in forbiddenRoute && forbiddenRoute.path && to.path === forbiddenRoute.path) {
     return true;
   }
   return false;
 }
 
-function buildForbiddenTarget(forbiddenRoute, redirectPath) {
+// Constroi o objeto de redirecionamento para a rota 403 preservando a URL original na query
+function buildForbiddenTarget(forbiddenRoute: RouteLocationRaw, redirectPath: string): RouteLocationRaw {
   if (typeof forbiddenRoute === 'string') {
     return { path: forbiddenRoute, query: { redirect: redirectPath } };
   }
   return { ...forbiddenRoute, query: { redirect: redirectPath } };
 }
 
-export function createAuthGuard(options = {}) {
+// Cria e retorna a funcao de guardiao compativel com o router.beforeEach
+export function createAuthGuard(options: AuthGuardOptions = {}) {
   const {
     router,
     keycloak: providedKeycloak,
@@ -51,19 +67,19 @@ export function createAuthGuard(options = {}) {
     }
   }
 
-  function resolveKeycloak(store) {
+  function resolveKeycloak(store: any) {
     return providedKeycloak || store?.keycloakInstance || null;
   }
 
-  async function evaluateAuthorization(targetRoute) {
+  async function evaluateAuthorization(targetRoute: RouteLocationNormalized) {
     const store = resolveStore();
-    const userRoles = store?.roles || [];
-    const userGroups = store?.groups || [];
+    const userRoles: string[] = store?.roles || [];
+    const userGroups: string[] = store?.groups || [];
 
     for (const record of targetRoute.matched) {
       if (record.meta?.roles) {
         const mode = record.meta.rolesMode || defaultRolesMode;
-        const requiredRoles = Array.isArray(record.meta.roles) ? record.meta.roles : [record.meta.roles];
+        const requiredRoles = normalizarListaPermissoes(record.meta.roles);
         const isAuthorized = mode === 'all'
           ? checkAllRoles(userRoles, requiredRoles)
           : checkAnyRole(userRoles, requiredRoles);
@@ -73,7 +89,7 @@ export function createAuthGuard(options = {}) {
 
       if (record.meta?.groups) {
         const mode = record.meta.groupsMode || defaultGroupsMode;
-        const requiredGroups = Array.isArray(record.meta.groups) ? record.meta.groups : [record.meta.groups];
+        const requiredGroups = normalizarListaPermissoes(record.meta.groups);
         const isAuthorized = mode === 'all'
           ? checkAllGroups(userGroups, requiredGroups)
           : checkAnyGroup(userGroups, requiredGroups);
@@ -81,21 +97,25 @@ export function createAuthGuard(options = {}) {
         if (!isAuthorized) return false;
       }
 
-      if (customRules && typeof customRules === 'function') {
+      if (customRules) {
         const customResult = await customRules(record, targetRoute);
         if (customResult === false) return false;
-        if (typeof customResult === 'object' && customResult !== null) return customResult;
+        if (customResult && typeof customResult === 'object') return customResult;
       }
     }
     return true;
   }
 
-  return async function authGuard(to) {
+  return async function authGuard(to: RouteLocationNormalized) {
     const store = resolveStore();
     const keycloak = resolveKeycloak(store);
 
+    if (keycloak?._isLoggingOut) {
+      return false;
+    }
+
     const hasAuthProtection = to.matched.some(
-      record => record.meta?.requiresAuth || record.meta?.roles || record.meta?.groups
+      (record) => record.meta?.requiresAuth || record.meta?.roles || record.meta?.groups
     );
 
     if (hasAuthProtection && initPromise) {
@@ -111,33 +131,33 @@ export function createAuthGuard(options = {}) {
         }
         store?.registrarLogDeslogamento?.(`Bloqueado pelo router na rota ${to.path}. Token vazio ou authenticated false.`);
 
-        if (keycloak && typeof keycloak.login === 'function') {
+        if (keycloak?.login) {
           try {
             if (debug) {
-              console.info(`Redirecionando para login do Keycloak. Rota: ${to.fullPath}`);
+              console.info(`Iniciando login do Keycloak. Rota: ${to.fullPath}`);
             }
             const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
             const redirectUri = origin ? `${origin}${to.fullPath}` : to.fullPath;
             await keycloak.login({ redirectUri });
             store?.getDataKeycloak?.();
-            if (onLogin && typeof onLogin === 'function') {
-              onLogin();
+            onLogin?.();
+            if (!keycloak.authenticated) {
+              return false;
             }
-            return false;
           } catch (error) {
             store?.registrarLogDeslogamento?.(`Erro ao redirecionar para login: ${error}`);
             store?.removeDataKeycloak?.();
             return false;
           }
+        } else {
+          return false;
         }
-
-        return false;
       }
     }
 
     if (forbiddenRoute && isForbiddenRoute(to, forbiddenRoute) && to.query?.redirect && router) {
-      const targetPath = to.query.redirect;
-      const targetRoute = router.resolve(targetPath);
+      const targetPath = String(to.query.redirect);
+      const targetRoute = router.resolve(targetPath) as unknown as RouteLocationNormalized;
       const isTargetAuthorized = await evaluateAuthorization(targetRoute);
 
       if (isTargetAuthorized === true) {
@@ -151,13 +171,11 @@ export function createAuthGuard(options = {}) {
       return true;
     }
 
-    if (typeof authResult === 'object' && authResult !== null) {
+    if (authResult && typeof authResult === 'object') {
       return authResult;
     }
 
-    if (onForbidden && typeof onForbidden === 'function') {
-      onForbidden(to);
-    }
+    onForbidden?.(to);
 
     if (forbiddenRoute) {
       return buildForbiddenTarget(forbiddenRoute, to.fullPath);

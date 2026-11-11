@@ -8,7 +8,7 @@ import {
   checkGroup,
   checkAnyGroup,
   checkAllGroups
-} from '../src/authorization.js';
+} from '../src/authorization';
 
 test('normalizeAccessItem formata corretamente caminhos e caixa alta', () => {
   assert.equal(normalizeAccessItem('admin'), 'ADMIN');

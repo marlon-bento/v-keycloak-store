@@ -1,5 +1,5 @@
 # ========
-# Arquivo definitivo de automação de versionamento e publicação.
+# Arquivo de automação de versionamento e publicação.
 # O Release-It é isolado para operar apenas no escopo do Git.
 # A compilação e a publicação no NPM são executadas como passos independentes,
 # garantindo que o Trusted Publishing (OIDC) valide a origem sem interferências.
@@ -7,6 +7,7 @@
 name: Release and Publish
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -15,8 +16,7 @@ on:
 jobs:
   release:
     name: Release
-    # TRAVA: O job só inicia se a mensagem do commit começar com fix:, feat: ou perf:
-    if: "startsWith(github.event.head_commit.message, 'fix:') || startsWith(github.event.head_commit.message, 'feat:') || startsWith(github.event.head_commit.message, 'perf:')"
+    if: "github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'fix:') || startsWith(github.event.head_commit.message, 'feat:') || startsWith(github.event.head_commit.message, 'perf:')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,12 +44,13 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Execute Git Release
+        if: "github.event_name != 'workflow_dispatch'"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx release-it --ci
 
-      # - name: Build Project por enquanto esse não precisa de build
-      #   run: npm run build
+      - name: Build Project
+        run: npm run build
 
       - name: Publish to NPM
         run: npm publish --provenance --access public

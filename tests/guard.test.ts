@@ -1,29 +1,44 @@
+// ========
+// Suite de testes unitarios para o guardiao de rotas (createAuthGuard).
+// Valida redirecionamento para login, bloqueio 403, auto-recuperacao e customRules.
+// ========
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createAuthGuard } from '../src/guard.js';
+import type { RouteLocationNormalized, Router } from 'vue-router';
+import { createAuthGuard } from '../src/guard';
+import type { KeycloakLoginOptions } from '../src/types';
 
 function createMockKeycloak(authenticated = false) {
   return {
     authenticated,
     loginCalled: false,
-    loginRedirectUri: null,
-    async login(options) {
+    loginRedirectUri: '',
+    async login(options?: KeycloakLoginOptions) {
       this.loginCalled = true;
-      this.loginRedirectUri = options?.redirectUri;
+      this.loginRedirectUri = options?.redirectUri ?? '';
     }
   };
 }
 
-function createMockStore({ token = '', roles = [], groups = [] } = {}) {
+interface MockStoreOptions {
+  token?: string;
+  roles?: string[];
+  groups?: string[];
+}
+
+function createMockStore({ token = '', roles = [], groups = [] }: MockStoreOptions = {}) {
   return {
     token,
     roles,
     groups,
-    logs: [],
-    registrarLogDeslogamento(msg) {
+    logs: [] as string[],
+    registrarLogDeslogamento(msg: string) {
       this.logs.push(msg);
     },
-    getDataKeycloak() {},
+    getDataKeycloak() {
+      return true;
+    },
     removeDataKeycloak() {}
   };
 }
@@ -34,7 +49,12 @@ test('permite navegacao quando rota nao possui regras de autenticacao', async ()
     keycloak: createMockKeycloak(false)
   });
 
-  const to = { matched: [{ meta: {} }], path: '/public', fullPath: '/public' };
+  const to = {
+    matched: [{ meta: {} }],
+    path: '/public',
+    fullPath: '/public'
+  } as unknown as RouteLocationNormalized;
+
   const result = await guard(to);
 
   assert.equal(result, true);
@@ -53,7 +73,7 @@ test('redireciona para login do Keycloak quando rota exige autenticacao e usuari
     matched: [{ meta: { requiresAuth: true } }],
     path: '/dashboard',
     fullPath: '/dashboard?tab=1'
-  };
+  } as unknown as RouteLocationNormalized;
 
   const result = await guard(to);
 
@@ -64,8 +84,11 @@ test('redireciona para login do Keycloak quando rota exige autenticacao e usuari
 
 test('redireciona para forbiddenRoute quando usuario autenticado nao possui role exigida', async () => {
   const keycloak = createMockKeycloak(true);
-  const store = createMockStore({ token: 'mock-token', roles: ['INVENTARIO_VIEW_EQUIPAMENTO'] });
-  let onForbiddenCalledWith = null;
+  const store = createMockStore({
+    token: 'mock-token',
+    roles: ['INVENTARIO_VIEW_EQUIPAMENTO']
+  });
+  let onForbiddenCalledWith: RouteLocationNormalized | null = null;
 
   const guard = createAuthGuard({
     store,
@@ -84,7 +107,7 @@ test('redireciona para forbiddenRoute quando usuario autenticado nao possui role
       { meta: { requiresAuth: true } },
       { meta: { roles: ['INVENTARIO_MANAGE_EQUIPAMENTO'] } }
     ]
-  };
+  } as unknown as RouteLocationNormalized;
 
   const result = await guard(to);
 
@@ -115,7 +138,7 @@ test('libera rota quando usuario possui role requerida', async () => {
     matched: [
       { meta: { roles: ['INVENTARIO_MANAGE_EQUIPAMENTO'] } }
     ]
-  };
+  } as unknown as RouteLocationNormalized;
 
   const result = await guard(to);
 
@@ -130,7 +153,7 @@ test('recupera automaticamente do 403 quando usuario ja tem permissao para a rot
   });
 
   const mockRouter = {
-    resolve(path) {
+    resolve(path: string) {
       if (path === '/gerenciar/auditorias') {
         return {
           path,
@@ -142,7 +165,7 @@ test('recupera automaticamente do 403 quando usuario ja tem permissao para a rot
       }
       return { path, fullPath: path, matched: [] };
     }
-  };
+  } as unknown as Router;
 
   const guard = createAuthGuard({
     router: mockRouter,
@@ -157,7 +180,7 @@ test('recupera automaticamente do 403 quando usuario ja tem permissao para a rot
     fullPath: '/403?redirect=/gerenciar/auditorias',
     query: { redirect: '/gerenciar/auditorias' },
     matched: [{ meta: {} }]
-  };
+  } as unknown as RouteLocationNormalized;
 
   const result = await guard(to);
 
@@ -186,7 +209,7 @@ test('executa customRules adequadamente para integracao com feature flags ou reg
     matched: [
       { meta: { featureFlag: 'NOVO_FLUXO' } }
     ]
-  };
+  } as unknown as RouteLocationNormalized;
 
   const result = await guard(to);
 
