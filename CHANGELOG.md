@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/marlon-bento/v-keycloak-store/compare/v2.1.0...v2.1.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* faltou o repositório e author ([ff2afa1](https://github.com/marlon-bento/v-keycloak-store/commit/ff2afa1169dcbcdb5b2f185b3ecef1266147d558))
+
 # [2.1.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.5.1...v2.1.0) (2026-11-11)
 
 
