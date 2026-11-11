@@ -1,5 +1,17 @@
 # Changelog
 
+# [2.1.0](https://github.com/marlon-bento/v-keycloak-store/compare/v1.5.1...v2.1.0) (2026-11-11)
+
+
+### Bug Fixes
+
+* travando o keycloak-js na versão 26.1.5 por que a 26.1.4 estáva com um bug na hora de logar que ficava dando tela branca ([6a99821](https://github.com/marlon-bento/v-keycloak-store/commit/6a99821743847af75715dc3d81d668048682e43d))
+
+
+### Features
+
+* inicando a versão 2 da biblioteca, melhorias nas diretivas, melhoria no guard, melhoria na tipagem, mudança de biblioteca core de keycloak-js para oidc-client-ts, também aumentaram as opções de customização inclusive adicionado modo de login por popup verifique as documentações para ver as melhorias ([e648db4](https://github.com/marlon-bento/v-keycloak-store/commit/e648db4a03e33ea50695a837ccb36e2fa8f791d4))
+
 ## [1.5.1](https://github.com/marlon-bento/v-keycloak-store/compare/v1.5.0...v1.5.1) (2026-09-28)
 
 
