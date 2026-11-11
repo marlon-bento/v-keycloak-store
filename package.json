@@ -1,7 +1,9 @@
 {
   "name": "v-keycloak-store",
   "version": "2.1.0",
+  "description": "Plugin de autenticação OIDC/Keycloak e autorização RBAC para Vue 3, Vue Router 4 e Pinia",
   "type": "module",
+  "author": "Márlon Bento Azevedo (https://github.com/marlon-bento)",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +13,14 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marlon-bento/v-keycloak-store.git"
+  },
+  "homepage": "https://github.com/marlon-bento/v-keycloak-store#readme",
+  "bugs": {
+    "url": "https://github.com/marlon-bento/v-keycloak-store/issues"
   },
   "scripts": {
     "build": "vite build",
