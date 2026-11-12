@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.2.0](https://github.com/marlon-bento/v-keycloak-store/compare/v2.1.1...v2.2.0) (2026-11-12)
+
+
+### Features
+
+* adicionado parametro melhorado de loginRoute pra quando é necessário ir pra uma pagina especifica depois de logar, também foi melhorado o default para quando logar cair na rota que solicitou o login ([a9b81ae](https://github.com/marlon-bento/v-keycloak-store/commit/a9b81aeeeda2bda6dec4dbc14e0233b594b9a33a))
+
 ## [2.1.1](https://github.com/marlon-bento/v-keycloak-store/compare/v2.1.0...v2.1.1) (2026-11-11)
 
 
