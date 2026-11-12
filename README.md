@@ -2,7 +2,7 @@
 
 > Plugin completo de autenticação OIDC/Keycloak e autorização RBAC para **Vue 3**, escrito 100% em **TypeScript** e construído sobre **oidc-client-ts**, **Vue Router 4** e **Pinia**.
 
-Gerencia todo o ciclo de vida da sessão do usuário de forma reativa e transparente: suporta login via **Redirect** ou **Popup** (com componente Vue de bloqueio personalizável, aceitando componentes `.vue` customizados e destravamento inteligente ao fechar a janela), renova o token JWT automaticamente em segundo plano, sincroniza login e logout entre **múltiplas abas e múltiplos sistemas em SSO**, protege rotas declarativamente (com auto-recuperação de erro 403 e rota de pós-logout pelo nome) e oferece diretivas de template avançadas (`v-can` / `v-has` com `.all`, `.not` e `.disable`).
+Gerencia todo o ciclo de vida da sessão do usuário de forma reativa e transparente: suporta login via **Redirect** ou **Popup** (com componente Vue de bloqueio personalizável, aceitando componentes `.vue` customizados e destravamento inteligente ao fechar a janela), renova o token JWT automaticamente em segundo plano, sincroniza login e logout entre **múltiplas abas e múltiplos sistemas em SSO**, protege rotas declarativamente (com auto-recuperação de erro 403 e configuração de rotas de pós-login e pós-logout pelo nome/path) e oferece diretivas de template avançadas (`v-can` / `v-has` com `.all`, `.not` e `.disable`).
 
 ---
 
@@ -11,7 +11,7 @@ Gerencia todo o ciclo de vida da sessão do usuário de forma reativa e transpar
 1. [Instalação e Dependências](#1-instalação-e-dependências)
 2. [Guia de Início Rápido (Quickstart)](#2-guia-de-início-rápido-quickstart)
 3. [Guia de Uso Passo a Passo](#3-guia-de-uso-passo-a-passo)
-   - [3.1. Inicialização do Plugin](#31-inicialização-do-plugin)
+   - [3.1. Inicialização do Plugin e Redirecionamento Automático](#31-inicialização-do-plugin-e-redirecionamento-automático)
    - [3.2. Login em Janela Popup (Padrão e com Componente Vue Customizado)](#32-login-em-janela-popup-padrão-e-com-componente-vue-customizado)
    - [3.3. Segurança de Armazenamento e Sincronização de Abas / SSO](#33-segurança-de-armazenamento-e-sincronização-de-abas--sso)
    - [3.4. Proteção de Rotas e Permissões no Vue Router](#34-proteção-de-rotas-e-permissões-no-vue-router)
@@ -80,6 +80,7 @@ app.use(KeycloakPlugin, {
   optionsKeycloak: {
     onLoad: 'login-required' // Força login ao abrir, ou use 'check-sso' se tiver páginas públicas
   },
+  loginRoute: { name: 'admin' }, // Opcional: se omitido, volta automaticamente para a URL exata onde o usuário estava (suportando subpaths como /panel)
   forbiddenRoute: { name: 'error-403' },
   logoutRoute: { name: 'home-publica' }, // Opcional: rota para onde enviar após deslogar
   onReady: () => {
@@ -92,14 +93,15 @@ app.use(KeycloakPlugin, {
 
 ## 3. Guia de Uso Passo a Passo
 
-### 3.1. Inicialização do Plugin
+### 3.1. Inicialização do Plugin e Redirecionamento Automático
 
 Ao registrar o `KeycloakPlugin`, você não precisa criar guardiões de rota manualmente nem configurar timers de renovação de token. O plugin faz tudo sozinho:
 1. Inicializa a sessão e limpa códigos temporários da URL (`?code=...&state=...`) sem recarregar a página.
-2. Unifica todas as roles do usuário (sejam elas do *Realm* ou específicas do *Client*) dentro da store do Pinia.
-3. Registra as diretivas `v-can` e `v-has` globalmente.
-4. Renova o token silenciosamente antes de vencer e monitora quedas de sessão SSO.
-5. Resolve automaticamente a rota configurada em `logoutRoute` para a URL completa exigida pelo servidor OIDC no momento do logout.
+2. **Suporte Nativo a Subpaths (`/panel`, `/admin`, etc.):** Se você não definir `loginRoute` nem `redirectUri`, o padrão automático é `window.location.origin + window.location.pathname` (preservando também a query string via `state.targetUrl`). Ou seja, se o usuário abrir `https://site.com.br/panel/noticias`, ele vai para o Keycloak e volta exatamente para `https://site.com.br/panel/noticias` sem cair na raiz `/` por engano.
+3. Unifica todas as roles do usuário (sejam elas do *Realm* ou específicas do *Client*) dentro da store do Pinia.
+4. Registra as diretivas `v-can` e `v-has` globalmente.
+5. Renova o token silenciosamente antes de vencer e monitora quedas de sessão SSO.
+6. Resolve automaticamente as rotas configuradas em `loginRoute` e `logoutRoute` (aceitando `{ name: '...' }` ou `{ path: '...' }`) para a URL completa exigida pelo servidor OIDC.
 
 ```typescript
 app.use(KeycloakPlugin, {
@@ -109,6 +111,7 @@ app.use(KeycloakPlugin, {
     onLoad: 'check-sso' // Permite navegar em rotas públicas sem exigir login imediato
   },
   refreshTimeout: 90000, // Checa a validade do token a cada 90 segundos (padrão)
+  loginRoute: { name: 'dashboard' }, // Opcional: força uma rota específica após o login
   forbiddenRoute: { name: 'error-403' }, // Para onde enviar o usuário sem permissão
   logoutRoute: { name: 'validar' }, // Para onde enviar o usuário após sair ou perder a sessão
   rolesMode: 'any', // Padrão das rotas: 'any' (basta ter uma role) ou 'all' (exige todas)
@@ -522,9 +525,9 @@ Cria a instância adaptadora de conexão com o Keycloak (`KeycloakAdapter`).
 | `monitorSession` | `boolean` | `true` | Monitora continuamente a sessão SSO via iframe do `oidc-client-ts`. |
 | `automaticSilentRenew` | `boolean` | `true` | Renova automaticamente o token em background antes de expirar. |
 | `scope` | `string` | `'openid profile email'` | Escopos OIDC solicitados durante o login. |
-| `redirectUri` | `string` | `window.location.origin + '/'` | URL de retorno após login por redirecionamento. |
+| `redirectUri` | `string` | `window.location.origin + window.location.pathname` | URL completa de retorno após login (se preferir passar pelo nome/path da rota, use `loginRoute` no `KeycloakPlugin`). |
 | `popupRedirectUri` | `string` | Igual ao `redirectUri` | URL de retorno usada internamente pela janela pop-up. |
-| `postLogoutRedirectUri` | `string` | Igual ao `redirectUri` | URL completa de retorno após deslogar (se preferir passar pelo nome da rota, use `logoutRoute` no `KeycloakPlugin`). |
+| `postLogoutRedirectUri` | `string` | `window.location.origin + '/'` | URL completa de retorno após deslogar (se preferir passar pelo nome/path da rota, use `logoutRoute` no `KeycloakPlugin`). |
 | `oidcSettings` | `Partial<UserManagerSettings>` | `{}` | Opções avançadas repassadas diretamente para o `UserManager` do `oidc-client-ts`. |
 
 ---
@@ -569,6 +572,7 @@ Opções aceitas no `app.use(KeycloakPlugin, options)`:
 | `keycloak` | `KeycloakAdapter` | **Obrigatório** | Instância criada por `createKeycloak()`. |
 | `router` | `Router` | **Obrigatório** | Instância do Vue Router. |
 | `optionsKeycloak` | `KeycloakInitOptions` | `{}` | Opções de inicialização (`onLoad: 'login-required' \| 'check-sso'`). |
+| `loginRoute` | `RouteLocationRaw` | URL atual (`origin + pathname`) | Rota do Vue Router para onde enviar após logar (ex: `{ name: 'admin' }` ou `{ path: '/painel' }`). |
 | `forbiddenRoute` | `RouteLocationRaw` | `undefined` | Rota para redirecionar quando faltar permissão (ex: `{ name: 'error-403' }`). |
 | `logoutRoute` | `RouteLocationRaw` | `undefined` | Rota para enviar o usuário após deslogar ou perder a sessão (ex: `{ name: 'validar' }`). |
 | `rolesMode` | `'any' \| 'all'` | `'any'` | Modo padrão para checagem de `roles` nas rotas. |

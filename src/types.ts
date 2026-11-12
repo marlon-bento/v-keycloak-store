@@ -117,6 +117,7 @@ export interface KeycloakAdapter {
   onUserLoaded: ((user: User) => void) | null;
   _storageListenerBound: boolean;
   _isLoggingOut: boolean;
+  _defaultLoginRedirectUri?: string;
   _defaultPostLogoutRedirectUri?: string;
   _syncUser(user: User | null): void;
   _setupCrossTabStorageSync(): void;
@@ -157,6 +158,7 @@ export interface KeycloakPluginOptions {
   refreshTimeout?: number;
   deactivateTimeout?: boolean;
   debug?: boolean;
+  loginRoute?: RouteLocationRaw;
   forbiddenRoute?: RouteLocationRaw;
   logoutRoute?: RouteLocationRaw;
   onForbidden?: (to: RouteLocationNormalized) => void;

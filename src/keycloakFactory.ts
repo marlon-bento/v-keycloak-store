@@ -25,7 +25,9 @@ export function createKeycloak(options: CreateKeycloakOptions): KeycloakAdapter 
   const cleanUrl = options.url.replace(/\/+$/, '');
   const authority = `${cleanUrl}/realms/${options.realm}`;
   const isBrowser = typeof window !== 'undefined';
-  const defaultRedirectUri = isBrowser ? `${window.location.origin}/` : '';
+
+  // Usa o pathname atual como padrao para suportar subrotas (ex: /panel) automaticamente
+  const defaultRedirectUri = isBrowser ? `${window.location.origin}${window.location.pathname}` : '';
 
   const loginMode = options.loginMode || 'redirect';
   const popupOverlayConfig = options.popupOverlay || {};
@@ -35,7 +37,7 @@ export function createKeycloak(options: CreateKeycloakOptions): KeycloakAdapter 
     : undefined;
 
   const redirectUri = options.redirectUri || defaultRedirectUri;
-  const postLogoutRedirectUri = options.postLogoutRedirectUri || redirectUri;
+  const postLogoutRedirectUri = options.postLogoutRedirectUri || (isBrowser ? `${window.location.origin}/` : redirectUri);
 
   const settings: UserManagerSettings = {
     authority,
@@ -87,7 +89,8 @@ export function createKeycloak(options: CreateKeycloakOptions): KeycloakAdapter 
     onUserLoaded: null,
     _storageListenerBound: false,
     _isLoggingOut: false,
-    _defaultPostLogoutRedirectUri: undefined,
+    _defaultLoginRedirectUri: options.redirectUri,
+    _defaultPostLogoutRedirectUri: options.postLogoutRedirectUri,
 
     // Sincroniza os tokens do objeto User do oidc-client-ts com as propriedades do adaptador
     _syncUser(user: User | null) {
@@ -237,7 +240,9 @@ export function createKeycloak(options: CreateKeycloakOptions): KeycloakAdapter 
       this._syncUser(user);
 
       if (!this.authenticated && initOptions?.onLoad === 'login-required') {
-        await this.login();
+        await this.login({
+          redirectUri: initOptions.redirectUri
+        });
         return this.authenticated;
       }
 
@@ -261,13 +266,19 @@ export function createKeycloak(options: CreateKeycloakOptions): KeycloakAdapter 
         return;
       }
 
-      const rawRedirect = loginOptions.redirectUri || settings.redirect_uri || (window.location.origin + window.location.pathname);
+      const rawRedirect =
+        loginOptions.redirectUri ||
+        this._defaultLoginRedirectUri ||
+        `${window.location.origin}${window.location.pathname}`;
+
       const cleanRedirectUri = rawRedirect.split('?')[0].split('#')[0];
 
       const targetUrl = loginOptions.targetUrl || (
         loginOptions.redirectUri
           ? loginOptions.redirectUri.replace(window.location.origin, '')
-          : (window.location.pathname + window.location.search)
+          : (this._defaultLoginRedirectUri
+              ? this._defaultLoginRedirectUri.replace(window.location.origin, '')
+              : (window.location.pathname + window.location.search))
       );
 
       await userManager.signinRedirect({

@@ -33,6 +33,7 @@ export const KeycloakPlugin: Plugin<[KeycloakPluginOptions]> = {
       refreshTimeout,
       deactivateTimeout,
       debug,
+      loginRoute,
       forbiddenRoute,
       logoutRoute,
       onForbidden,
@@ -48,10 +49,16 @@ export const KeycloakPlugin: Plugin<[KeycloakPluginOptions]> = {
       console.info('[v-keycloak-store] Modo debug ativado.');
     }
 
-    // Resolve o objeto de rota do Vue Router para a URL completa exigida pelo servidor OIDC no pos-logout
+    // Resolve o objeto loginRoute do Vue Router para a URL completa de retorno pos-login
+    if (loginRoute && typeof window !== 'undefined') {
+      const rotaLoginResolvida = router.resolve(loginRoute);
+      keycloak._defaultLoginRedirectUri = new URL(rotaLoginResolvida.href, window.location.origin).href;
+    }
+
+    // Resolve o objeto logoutRoute do Vue Router para a URL completa exigida no pos-logout
     if (logoutRoute && typeof window !== 'undefined') {
-      const rotaResolvida = router.resolve(logoutRoute);
-      keycloak._defaultPostLogoutRedirectUri = new URL(rotaResolvida.href, window.location.origin).href;
+      const rotaLogoutResolvida = router.resolve(logoutRoute);
+      keycloak._defaultPostLogoutRedirectUri = new URL(rotaLogoutResolvida.href, window.location.origin).href;
     }
 
     keycloakStore.setKeycloakInstance(keycloak);
@@ -82,7 +89,8 @@ export const KeycloakPlugin: Plugin<[KeycloakPluginOptions]> = {
 
       if (requiresAuth) {
         const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
-        const redirectUri = origin && currentRoute?.fullPath ? `${origin}${currentRoute.fullPath}` : undefined;
+        const baseHref = currentRoute ? router.resolve(currentRoute).href : window.location.pathname;
+        const redirectUri = origin ? `${origin}${baseHref}` : undefined;
         keycloak.login({ redirectUri });
       }
     };
